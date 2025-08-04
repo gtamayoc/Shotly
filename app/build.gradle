@@ -1,0 +1,92 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+}
+
+android {
+    namespace 'com.example.capturas'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.example.capturas"
+        minSdk 21
+        targetSdk 35
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    buildFeatures {
+        compose = true // Para Jetpack Compose
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.14" // O la última disponible
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+}
+
+dependencies {
+
+    implementation libs.appcompat
+    implementation libs.material
+    implementation libs.activity
+    implementation libs.constraintlayout
+    implementation libs.core.ktx
+    implementation libs.lifecycle.runtime.ktx
+    implementation platform(libs.compose.bom)
+    implementation libs.ui.graphics
+    implementation libs.material3
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+
+
+    implementation(libs.core.ktx.v1131)
+    implementation(libs.activity.compose.v190)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.ui.tooling.preview)
+    androidTestImplementation platform(libs.compose.bom)
+    androidTestImplementation libs.ui.test.junit4
+    debugImplementation libs.ui.tooling
+    debugImplementation libs.ui.test.manifest
+
+    implementation(libs.coil.compose)
+    implementation(libs.coil.compose.v240)
+    implementation libs.androidx.foundation
+
+
+    // Para observeAsState
+    // ... tus otras dependencias
+
+    // En lugar de usar $compose_version, usa la versión específica:
+    implementation libs.androidx.runtime.livedata
+
+    // O mejor aún, usa la versión con BOM (recomendado):
+    implementation libs.androidx.compose.bom.v20231001
+    implementation libs.runtime.livedata
+
+    // También asegúrate de tener estas dependencias de ViewModel
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.lifecycle.runtime.compose
+
+    //Easy permissions
+    implementation libs.easypermissions.ktx
+
+}

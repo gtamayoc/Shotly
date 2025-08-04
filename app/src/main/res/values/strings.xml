@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">App Cap</string>
+    <string name="title_activity_main2">MainActivity2</string>
+    <string name="title_activity_home_screen">HomeScreen</string>
+    <string name="title_activity_capture_card">CaptureCard</string>
+    <string name="granted_msg">Permisos concedidos</string>
+    <string name="not_granted_msg">Permisos NO concedidos</string>
+    <string name="request_msg">Se necesitan permisos para continuar</string>
+    <string name="request_button">Request Permission</string>
+    <string name="title_activity_main_screen">MainScreen</string>
+</resources>
