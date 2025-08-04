@@ -1,4 +1,4 @@
-package com.example.capturas.ui.screens
+package com.example.shotly.ui.screens
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.capturas.capture.Capture
+import com.example.shotly.capture.Capture
 
 @Composable
 fun ImageGallery(

@@ -1,4 +1,4 @@
-package com.example.capturas.ui.screens
+package com.example.shotly.ui.screens
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -15,7 +15,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.layout.Arrangement
@@ -50,12 +49,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -63,18 +59,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.example.capturas.R
-import com.example.capturas.ScreenshotService
-import com.example.capturas.capture.Capture
-import com.example.capturas.model.CapturesViewModel
-import com.example.capturas.ui.theme.CapturasTheme
+import com.example.shotly.R
+import com.example.shotly.ScreenshotService
+import com.example.shotly.capture.Capture
+import com.example.shotly.model.CapturesViewModel
+import com.example.shotly.ui.theme.CapturasTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

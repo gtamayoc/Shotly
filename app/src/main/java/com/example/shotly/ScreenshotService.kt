@@ -1,4 +1,4 @@
-package com.example.capturas
+package com.example.shotly
 
 import android.app.Activity
 import android.app.NotificationChannel
@@ -22,7 +22,7 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import com.example.capturas.capture.Capture
+import com.example.shotly.capture.Capture
 
 /**
  * Servicio optimizado para captura de pantalla en segundo plano

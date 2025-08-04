@@ -1,4 +1,4 @@
-package com.example.capturas.ui.theme
+package com.example.shotly.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

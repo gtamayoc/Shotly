@@ -1,9 +1,9 @@
-package com.example.capturas.repository
+package com.example.shotly.repository
 
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.MediaStore
-import com.example.capturas.capture.Capture
+import com.example.shotly.capture.Capture
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

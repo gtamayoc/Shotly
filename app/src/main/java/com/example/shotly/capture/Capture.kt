@@ -1,4 +1,4 @@
-package com.example.capturas.capture
+package com.example.shotly.capture
 
 import android.net.Uri
 

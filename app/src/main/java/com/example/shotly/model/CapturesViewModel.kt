@@ -1,12 +1,12 @@
-package com.example.capturas.model
+package com.example.shotly.model
 
 import android.content.ContentResolver
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.capturas.capture.Capture
-import com.example.capturas.repository.CapturesRepository
+import com.example.shotly.capture.Capture
+import com.example.shotly.repository.CapturesRepository
 import kotlinx.coroutines.launch
 
 class CapturesViewModel : ViewModel() {

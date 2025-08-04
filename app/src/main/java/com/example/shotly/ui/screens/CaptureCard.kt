@@ -1,4 +1,4 @@
-package com.example.capturas.ui.screens
+package com.example.shotly.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,8 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.example.capturas.capture.Capture
-import com.example.capturas.ui.theme.CapturasTheme
+import com.example.shotly.capture.Capture
+import com.example.shotly.ui.theme.CapturasTheme
 
 class CaptureCard : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

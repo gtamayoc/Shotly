@@ -1,4 +1,4 @@
-package com.example.capturas.ui.screens
+package com.example.shotly.ui.screens
 
 
 import androidx.compose.foundation.background

@@ -1,4 +1,4 @@
-package com.example.capturas.ui.screens
+package com.example.shotly.ui.screens
 
 import android.Manifest.permission.CAMERA
 import android.Manifest.permission.READ_CONTACTS
@@ -9,7 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.capturas.R
+import com.example.shotly.R
 import com.vmadalin.easypermissions.EasyPermissions
 import com.vmadalin.easypermissions.dialogs.SettingsDialog
 
