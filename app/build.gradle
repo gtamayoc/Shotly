@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace 'com.example.capturas'
+    namespace 'com.example.shotly'
     compileSdk 35
 
     defaultConfig {
-        applicationId "com.example.capturas"
+        applicationId "com.example.shotly"
         minSdk 21
         targetSdk 35
         versionCode 1
