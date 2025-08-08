@@ -8,4 +8,5 @@
     <string name="request_msg">Se necesitan permisos para continuar</string>
     <string name="request_button">Request Permission</string>
     <string name="title_activity_main_screen">MainScreen</string>
+    <string name="title_activity_main">MainActivity</string>
 </resources>

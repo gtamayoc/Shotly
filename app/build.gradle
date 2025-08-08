@@ -34,7 +34,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14" // O la última disponible
+        kotlinCompilerExtensionVersion = "1.7.0" // O la última disponible
     }
     kotlinOptions {
         jvmTarget = '11'
