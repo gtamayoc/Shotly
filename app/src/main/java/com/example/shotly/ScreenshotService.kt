@@ -10,6 +10,7 @@ import android.app.Service
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
@@ -71,8 +72,17 @@ class ScreenshotService : Service() {
                 val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, Activity.RESULT_CANCELED)
                 val data = intent.getParcelableExtra<Intent>(EXTRA_DATA_INTENT)
                 if (resultCode == Activity.RESULT_OK && data != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        startForeground(
+                            NOTIF_ID,
+                            buildNotification("Inicializando…"),
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+                        )
+                    } else {
+                        startForeground(NOTIF_ID, buildNotification("Inicializando…"))
+                    }
+
                     projection = mpm.getMediaProjection(resultCode, data)
-                    startInForeground()
                     updateNotification("Listo para capturar")
                 } else {
                     stopSelf()
@@ -100,10 +110,25 @@ class ScreenshotService : Service() {
         return START_STICKY
     }
 
-    private fun startInForeground() {
+    private fun startInForeground1() {
         val notification = buildNotification("Inicializando…")
         startForeground(NOTIF_ID, notification)
     }
+
+    private fun startInForeground() {
+        val notification = buildNotification("Inicializando…")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // API 34
+            startForeground(
+                NOTIF_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            )
+        } else {
+            startForeground(NOTIF_ID, notification)
+        }
+    }
+
 
     private fun buildNotification(content: String): Notification {
         // PendingIntent para abrir la app

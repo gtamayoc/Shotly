@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+
 
 @Composable
 fun HomeScreen(mpm: MediaProjectionManager) {
@@ -32,30 +34,23 @@ fun HomeScreen(mpm: MediaProjectionManager) {
     var hasNotifPerm by remember { mutableStateOf(checkNotificationsPermission(context)) }
     var serviceRunning by remember { mutableStateOf(false) }
 
-    // Launcher para MediaProjection
-    val mpLauncher = remember {
-        (context as? ComponentActivity)?.registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            if (result.resultCode == Activity.RESULT_OK && result.data != null) {
-                val startIntent = Intent(context, ScreenshotService::class.java).apply {
-                    action = ScreenshotService.ACTION_START
-                    putExtra(ScreenshotService.EXTRA_RESULT_CODE, result.resultCode)
-                    putExtra(ScreenshotService.EXTRA_DATA_INTENT, result.data)
-                }
-                ContextCompat.startForegroundService(context, startIntent)
-                serviceRunning = true
+    val mpLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            val startIntent = Intent(context, ScreenshotService::class.java).apply {
+                action = ScreenshotService.ACTION_START
+                putExtra(ScreenshotService.EXTRA_RESULT_CODE, result.resultCode)
+                putExtra(ScreenshotService.EXTRA_DATA_INTENT, result.data)
             }
+            ContextCompat.startForegroundService(context, startIntent)
         }
     }
 
-    // Launcher POST_NOTIFICATIONS (Android 13+)
-    val notifPermLauncher = remember {
-        (context as? ComponentActivity)?.registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { granted ->
-            hasNotifPerm = granted || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-        }
+    val notifPermLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasNotifPerm = granted || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
     }
 
     Column(
