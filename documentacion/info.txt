@@ -1,0 +1,115 @@
+---
+
+## **📱 Proyecto: App de Capturas Inteligentes**
+
+### **Arquitectura y Principios**
+
+* **Arquitectura:** MVVM + Clean Architecture
+* **Principios:** Separación de responsabilidades, testabilidad, y extensibilidad.
+* **Capas:**
+
+  * **Domain:** Casos de uso y modelos de negocio.
+  * **Data:** Repositorios, fuentes de datos (local y remota).
+  * **UI (Presentation):** ViewModels y pantallas Jetpack Compose.
+
+---
+
+### **🛠️ Librerías y Tecnologías**
+
+* **UI:** Jetpack Compose (interfaz moderna y declarativa).
+* **Inyección de dependencias:** Hilt.
+* **Persistencia local:** Room (metadatos de capturas).
+* **Preferencias:** DataStore (configuración y preferencias del usuario).
+* **Carga de imágenes:** Glide (optimizado para Compose).
+* **Animaciones y utilidades:** Accompanist (navegación animada, permisos).
+* **Permisos y resultados:** ActivityResultContracts.
+* **Tareas en segundo plano:** WorkManager (procesos de captura, optimización, limpieza).
+* **Capturas de pantalla:** MediaProjection API.
+
+---
+
+### **✨ Funcionalidades Principales**
+
+#### **1. Captura de pantalla**
+
+* **Captura completa:** Utilizando `MediaProjection`.
+* **Captura de área:** Overlay con selección y recorte dinámico.
+* **Acceso rápido:** Botón flotante (FAB) y notificaciones persistentes para tomar capturas.
+
+#### **2. Organización inteligente**
+
+* **Criterios:** Fecha, etiquetas, favoritos, carpetas virtuales.
+* **Búsqueda avanzada:** Por nombre, fecha, etiqueta.
+* **Metadatos:** Guardados en Room para filtrado rápido.
+
+#### **3. Edición integrada**
+
+* Recortar.
+* Dibujar y resaltar.
+* Añadir texto.
+* Deshacer/rehacer acciones.
+* Previsualización en tiempo real antes de guardar.
+
+#### **4. Listado de capturas**
+
+* Vista en **Grid** o **Lista** (conmutables).
+* Selección múltiple.
+* Acciones rápidas: compartir, eliminar, marcar como favorito.
+* Animaciones suaves al entrar/salir de elementos.
+
+#### **5. Compartir**
+
+* Integración con Intents de Android.
+* Compatibilidad con apps de mensajería, redes sociales y almacenamiento en la nube.
+
+#### **6. Configuración**
+
+* **Organización:** Selección de criterio (fecha, carpeta, etiquetas).
+* **Tipo de captura:** Completa o área (radio buttons).
+* **Calidad de imagen:** Alta, media, baja.
+* **Formato:** PNG/JPEG.
+* **Tema:** Claro, oscuro, automático.
+* **Nombre de archivo:** Personalizable con variables como `{fecha}`, `{hora}`, `{etiqueta}`.
+
+#### **7. Notificaciones**
+
+* Botón para iniciar captura.
+* Botón para detener el servicio.
+* Acciones rápidas configurables.
+
+---
+
+### **💡 Experiencia de Usuario (UI/UX Moderna)**
+
+#### **Pantalla Principal**
+
+* **AppBar:** Búsqueda, acceso a favoritos y menú.
+* **Grid/List:** Miniaturas optimizadas y animadas.
+* **FAB Expandible:** Captura completa o área.
+* **Animaciones:** Transiciones fluidas con Accompanist.
+
+#### **Pantalla de Edición**
+
+* Herramientas flotantes: recorte, pincel, texto.
+* Barra de acciones: deshacer, rehacer, guardar.
+* Vista previa en tiempo real.
+
+#### **Pantalla de Configuración**
+
+* Preferencias agrupadas por categoría.
+* Switches y radio buttons con estilo moderno.
+* Previews para organización y tipo de captura.
+* Persistencia inmediata con DataStore.
+
+---
+
+### **🔄 Flujo de trabajo**
+
+1. Usuario abre la app y ve la galería.
+2. Toca el FAB → elige **captura completa** o **captura de área**.
+3. Captura procesada en background.
+4. Imagen guardada en almacenamiento y metadatos.
+5. Opción inmediata de **editar**, **compartir** o **organizar**.
+6. Configuraciones persistentes en.
+
+---
