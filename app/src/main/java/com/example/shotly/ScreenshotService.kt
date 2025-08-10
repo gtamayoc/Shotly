@@ -213,6 +213,18 @@ class ScreenshotService : Service() {
         var vDisplay: VirtualDisplay? = null
 
         try {
+            // Antes de crear VirtualDisplay
+            proj.registerCallback(object : MediaProjection.Callback() {
+                override fun onStop() {
+                    super.onStop()
+                    // Aquí liberas recursos si el sistema detiene la captura
+                    vDisplay?.release()
+                    imageReader.close()
+                    stopSelf() // Si quieres cerrar el servicio
+                }
+            }, imgHandler) // handler puede ser null si no necesitas uno específico
+
+
             vDisplay = proj.createVirtualDisplay(
                 "screencap",
                 width,
