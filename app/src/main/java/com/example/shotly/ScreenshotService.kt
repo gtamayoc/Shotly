@@ -53,7 +53,7 @@ class ScreenshotService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        mpm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         createNotificationChannel()
     }
 
@@ -110,10 +110,6 @@ class ScreenshotService : Service() {
         return START_STICKY
     }
 
-    private fun startInForeground1() {
-        val notification = buildNotification("Inicializando…")
-        startForeground(NOTIF_ID, notification)
-    }
 
     private fun startInForeground() {
         val notification = buildNotification("Inicializando…")
@@ -178,7 +174,7 @@ class ScreenshotService : Service() {
     }
 
     private fun updateNotification(content: String) {
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(NOTIF_ID, buildNotification(content))
     }
 
@@ -190,7 +186,7 @@ class ScreenshotService : Service() {
                 NotificationManager.IMPORTANCE_LOW
             )
             channel.description = "Notificaciones del servicio de capturas"
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(channel)
         }
     }
