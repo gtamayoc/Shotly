@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -47,12 +48,21 @@ fun HomeScreen(sharedVM: SharedViewModel) {
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK && result.data != null) {
             val startIntent = Intent(context, ScreenshotService::class.java).apply {
-                action = ScreenshotService.Companion.ACTION_START
-                putExtra(ScreenshotService.Companion.EXTRA_RESULT_CODE, result.resultCode)
-                putExtra(ScreenshotService.Companion.EXTRA_DATA_INTENT, result.data)
+                action = ScreenshotService.ACTION_START
+                putExtra(ScreenshotService.EXTRA_RESULT_CODE, result.resultCode)
+                putExtra(ScreenshotService.EXTRA_DATA_INTENT, result.data)
             }
             ContextCompat.startForegroundService(context, startIntent)
+
+            // Después de un pequeño delay, disparar captura
+            android.os.Handler(Looper.getMainLooper()).postDelayed({
+                val captureIntent = Intent(context, ScreenshotService::class.java).apply {
+                    action = ScreenshotService.ACTION_CAPTURE
+                }
+                ContextCompat.startForegroundService(context, captureIntent)
+            }, 1000)
         }
+
     }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
