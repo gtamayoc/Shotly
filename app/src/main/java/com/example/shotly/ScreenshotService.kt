@@ -22,9 +22,11 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -93,7 +95,10 @@ class ScreenshotService : Service() {
                 if (projection == null) {
                     updateNotification("Permiso no disponible. Reinicia el servicio.")
                 } else {
-                    takeScreenshotOnce()
+                    // Después de un pequeño delay, disparar captura
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        takeScreenshotOnce()
+                    }, 100)
                 }
             }
 
