@@ -12,11 +12,22 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        checkAndRequestPermission()
         setContent {
             val sharedVM: SharedViewModel = viewModel()
             sharedVM.mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
             AppNavHost(sharedVM)
+        }
+    }
+
+    private fun checkAndRequestPermission() {
+        if (hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            saveToGallery()
+        } else {
+            requestPermission(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                requestCode = 100
+            )
         }
     }
 }

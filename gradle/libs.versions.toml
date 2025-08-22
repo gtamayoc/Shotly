@@ -11,6 +11,7 @@ coilCompose = "2.6.0"
 coilComposeVersion = "2.4.0"
 composeBomVersion = "2023.10.01"
 coreKtxVersion = "1.13.1"
+easypermissions = "3.0.0"
 easypermissionsKtx = "1.0.0"
 foundation = "1.8.3"
 glide = "4.16.0"
@@ -68,6 +69,7 @@ coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose"
 coil-compose-v240 = { module = "io.coil-kt:coil-compose", version.ref = "coilComposeVersion" }
 compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "glide" }
 core-ktx-v1131 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
+easypermissions = { module = "pub.devrel:easypermissions", version.ref = "easypermissions" }
 easypermissions-ktx = { module = "com.vmadalin:easypermissions-ktx", version.ref = "easypermissionsKtx" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

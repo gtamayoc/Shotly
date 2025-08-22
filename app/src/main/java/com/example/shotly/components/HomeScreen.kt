@@ -60,7 +60,7 @@ fun HomeScreen(sharedVM: SharedViewModel) {
                     action = ScreenshotService.ACTION_CAPTURE
                 }
                 ContextCompat.startForegroundService(context, captureIntent)
-            }, 1000)
+            }, 500)
         }
 
     }
