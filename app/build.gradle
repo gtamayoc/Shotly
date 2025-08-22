@@ -114,6 +114,6 @@ dependencies {
 // Permissions (Accompanist)
     implementation libs.accompanist.permissions
 
-    implementation(libs.easypermissions)
+    implementation("pub.devrel:easypermissions:3.0.0")
 
 }
