@@ -6,27 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,13 +20,17 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.shotly.ScreenshotService
 import com.example.shotly.viewModel.SharedViewModel
-
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(sharedVM: SharedViewModel) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var hasNotifPerm by remember { mutableStateOf(checkNotificationsPermission(context)) }
-    var serviceRunning by remember { mutableStateOf(false) }
+    val serviceRunning by sharedVM.serviceRunning.collectAsState() // stateflow en ViewModel
+
     val mpm = sharedVM.mpm
     val mpLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -54,21 +43,25 @@ fun HomeScreen(sharedVM: SharedViewModel) {
             }
             ContextCompat.startForegroundService(context, startIntent)
 
-            // Después de un pequeño delay, disparar captura
-            android.os.Handler(Looper.getMainLooper()).postDelayed({
+            scope.launch {
+                delay(1000) // coroutine en vez de Handler
                 val captureIntent = Intent(context, ScreenshotService::class.java).apply {
                     action = ScreenshotService.ACTION_CAPTURE
                 }
                 ContextCompat.startForegroundService(context, captureIntent)
-            }, 1000)
-        }
+            }
 
+            sharedVM.setServiceRunning(true)
+        }
     }
 
     val notifPermLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         hasNotifPerm = granted || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+        if (hasNotifPerm) {
+            mpLauncher.launch(mpm.createScreenCaptureIntent())
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -79,16 +72,16 @@ fun HomeScreen(sharedVM: SharedViewModel) {
         }
     }
 
-    Scaffold {
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(paddingValues)
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("ScreenShots", style = MaterialTheme.typography.headlineMedium)
-            Text(if (!serviceRunning) "Iniciar servicio (pedir permiso)" else "Reiniciar servicio")
+            Text("Shotly - Capturas", style = MaterialTheme.typography.headlineMedium)
+            Text(if (!serviceRunning) "Servicio detenido" else "Servicio en ejecución")
             Spacer(Modifier.height(16.dp))
             Box(
                 modifier = Modifier
@@ -98,7 +91,6 @@ fun HomeScreen(sharedVM: SharedViewModel) {
             )
         }
     }
-
 }
 
 private fun checkNotificationsPermission(context: Context): Boolean {

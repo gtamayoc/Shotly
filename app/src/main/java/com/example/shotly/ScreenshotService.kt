@@ -1,6 +1,5 @@
 package com.example.shotly
 
-
 import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
@@ -8,29 +7,24 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.ContentValues
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
 import android.hardware.display.DisplayManager
-import android.hardware.display.VirtualDisplay
 import android.media.ImageReader
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
 import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.content.ContextCompat
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
 
 class ScreenshotService : Service() {
 
@@ -43,26 +37,16 @@ class ScreenshotService : Service() {
         const val EXTRA_DATA_INTENT = "dataIntent"
 
         const val CHANNEL_ID = "screenshot_channel"
-        const val CHANNEL_NAME = "Capturas de pantalla"
         const val NOTIF_ID = 1337
     }
 
     private lateinit var mpm: MediaProjectionManager
     private var projection: MediaProjection? = null
 
-    private val imgThread = HandlerThread("screenshot-img").apply { start() }
-    private val imgHandler = Handler(imgThread.looper)
-
     override fun onCreate() {
         super.onCreate()
         mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         createNotificationChannel()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        projection?.stop()
-        imgThread.quitSafely()
     }
 
     override fun onBind(intent: Intent?) = null
@@ -74,72 +58,40 @@ class ScreenshotService : Service() {
                 val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, Activity.RESULT_CANCELED)
                 val data = intent.getParcelableExtra<Intent>(EXTRA_DATA_INTENT)
                 if (resultCode == Activity.RESULT_OK && data != null) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        startForeground(
-                            NOTIF_ID,
-                            buildNotification("Inicializando…"),
-                            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
-                        )
-                    } else {
-                        startForeground(NOTIF_ID, buildNotification("Inicializando…"))
-                    }
-
+                    startInForeground("Inicializando…")
                     projection = mpm.getMediaProjection(resultCode, data)
                     updateNotification("Listo para capturar")
-                } else {
-                    stopSelf()
-                }
+                } else stopSelf()
             }
 
-            ACTION_CAPTURE -> {
-                if (projection == null) {
-                    updateNotification("Permiso no disponible. Reinicia el servicio.")
-                } else {
-                    // Después de un pequeño delay, disparar captura
-                    Handler(Looper.getMainLooper()).postDelayed({
-                        takeScreenshotOnce()
-                    }, 100)
-                }
-            }
+            ACTION_CAPTURE -> takeScreenshotOnce()
 
             ACTION_STOP -> {
                 stopForeground(STOP_FOREGROUND_REMOVE)
+                projection?.stop()
                 stopSelf()
-            }
-
-            else -> {
-                // Si se arranca sin acción, solo asegura notificación si ya había proyección
-                if (projection != null) startInForeground()
             }
         }
         return START_STICKY
     }
 
-
-    private fun startInForeground() {
-        val notification = buildNotification("Inicializando…")
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // API 34
+    private fun startInForeground(content: String) {
+        val notification = buildNotification(content)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             startForeground(
-                NOTIF_ID,
-                notification,
+                NOTIF_ID, notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
             )
-        } else {
-            startForeground(NOTIF_ID, notification)
-        }
+        } else startForeground(NOTIF_ID, notification)
     }
 
-
-    private fun buildNotification(content: String): Notification {
-        // PendingIntent para abrir la app
+    private fun buildNotification(content: String, imageUri: Uri? = null): Notification {
         val openAppIntent = Intent(this, MainActivity::class.java)
         val contentPI = PendingIntent.getActivity(
             this, 0, openAppIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Acción: Capturar
         val captureIntent =
             Intent(this, ScreenshotService::class.java).apply { action = ACTION_CAPTURE }
         val capturePI = PendingIntent.getService(
@@ -147,186 +99,136 @@ class ScreenshotService : Service() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Acción: Detener
         val stopIntent = Intent(this, ScreenshotService::class.java).apply { action = ACTION_STOP }
         val stopPI = PendingIntent.getService(
             this, 2, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        return NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_camera)
             .setContentTitle("Servicio de capturas")
             .setContentText(content)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(contentPI)
-            .addAction(
-                NotificationCompat.Action(
-                    android.R.drawable.ic_menu_camera,
-                    "Tomar captura",
-                    capturePI
-                )
+            .addAction(android.R.drawable.ic_menu_camera, "Capturar", capturePI)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Detener", stopPI)
+
+        imageUri?.let {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, it)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            val sharePI = PendingIntent.getActivity(
+                this, 3, Intent.createChooser(shareIntent, "Compartir captura"),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            .addAction(
-                NotificationCompat.Action(
-                    android.R.drawable.ic_menu_close_clear_cancel,
-                    "Detener",
-                    stopPI
-                )
-            )
-            .build()
+            builder.addAction(android.R.drawable.ic_menu_share, "Compartir", sharePI)
+        }
+
+        return builder.build()
     }
 
-    private fun updateNotification(content: String) {
+    private fun updateNotification(content: String, imageUri: Uri? = null) {
         val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        nm.notify(NOTIF_ID, buildNotification(content))
+        nm.notify(NOTIF_ID, buildNotification(content, imageUri))
     }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
+            val channel =
+                NotificationChannel(CHANNEL_ID, "Capturas", NotificationManager.IMPORTANCE_LOW)
+            channel.description = "Notificaciones de capturas"
+            (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(
+                channel
             )
-            channel.description = "Notificaciones del servicio de capturas"
-            val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            nm.createNotificationChannel(channel)
         }
     }
 
     private fun takeScreenshotOnce() {
         val proj = projection ?: return
-
         val metrics = resources.displayMetrics
         val width = metrics.widthPixels
         val height = metrics.heightPixels
         val density = metrics.densityDpi
 
-        val imageReader = ImageReader.newInstance(
-            width,
-            height,
-            PixelFormat.RGBA_8888,
-            2
+        val imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
+
+        // 👉 REGISTRA EL CALLBACK ANTES
+        proj.registerCallback(object : MediaProjection.Callback() {
+            override fun onStop() {
+                super.onStop()
+                // liberar recursos si el sistema detiene la proyección
+                try { imageReader.close() } catch (_: Exception) {}
+                stopSelf()
+            }
+        }, Handler(Looper.getMainLooper()))
+
+        val vDisplay = proj.createVirtualDisplay(
+            "screencap", width, height, density,
+            DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+            imageReader.surface, null, null
         )
 
-        var vDisplay: VirtualDisplay? = null
+        imageReader.setOnImageAvailableListener({ reader ->
+            val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
+            val plane = image.planes[0]
+            val buffer = plane.buffer
+            val pixelStride = plane.pixelStride
+            val rowStride = plane.rowStride
+            val rowPadding = rowStride - pixelStride * width
 
-        try {
-            // Antes de crear VirtualDisplay
-            proj.registerCallback(object : MediaProjection.Callback() {
-                override fun onStop() {
-                    super.onStop()
-                    // Aquí liberas recursos si el sistema detiene la captura
-                    vDisplay?.release()
-                    imageReader.close()
-                    stopSelf() // Si quieres cerrar el servicio
-                }
-            }, imgHandler) // handler puede ser null si no necesitas uno específico
-
-
-            vDisplay = proj.createVirtualDisplay(
-                "screencap",
-                width,
+            var bitmap = Bitmap.createBitmap(
+                width + rowPadding / pixelStride,
                 height,
-                density,
-                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                imageReader.surface,
-                null,
-                imgHandler
+                Bitmap.Config.ARGB_8888
             )
+            bitmap.copyPixelsFromBuffer(buffer)
+            val cropped = Bitmap.createBitmap(bitmap, 0, 0, width, height)
+            bitmap.recycle()
+            bitmap = cropped
 
-            imageReader.setOnImageAvailableListener({ reader ->
-                val image = reader.acquireLatestImage() ?: return@setOnImageAvailableListener
-                try {
-                    val plane = image.planes[0]
-                    val buffer = plane.buffer
-                    val pixelStride = plane.pixelStride
-                    val rowStride = plane.rowStride
-                    val rowPadding = rowStride - pixelStride * width
+            val uri = saveBitmapToCache(bitmap)
+            bitmap.recycle()
+            updateNotification("Captura guardada", uri)
 
-                    var bitmap = Bitmap.createBitmap(
-                        width + rowPadding / pixelStride,
-                        height,
-                        Bitmap.Config.ARGB_8888
-                    )
-                    bitmap.copyPixelsFromBuffer(buffer)
-
-                    val cropped = Bitmap.createBitmap(bitmap, 0, 0, width, height)
-                    bitmap.recycle()
-                    bitmap = cropped
-
-                    val uri = saveBitmapToMediaStore(bitmap, width, height)
-                    bitmap.recycle()
-
-                    updateNotification("Captura guardada")
-                    // Opcional: podrías lanzar una notificación con la miniatura/acción compartir
-                } catch (e: Exception) {
-                    updateNotification("Error al capturar: ${e.message}")
-                } finally {
-                    image.close()
-                    reader.setOnImageAvailableListener(null, null)
-                    reader.close()
-                    vDisplay?.release()
-                }
-            }, imgHandler)
-
-            // Pequeño retraso opcional: el listener capturará cuando esté listo
-        } catch (e: Exception) {
-            updateNotification("Error creando VirtualDisplay: ${e.message}")
-            try {
-                imageReader.close()
-            } catch (_: Exception) {
-            }
-            try {
-                vDisplay?.release()
-            } catch (_: Exception) {
-            }
-        }
+            image.close()
+            reader.close()
+            vDisplay.release()
+        }, Handler(Looper.getMainLooper()))
     }
 
-    private fun saveBitmapToMediaStore(bitmap: Bitmap, width: Int, height: Int): Uri? {
-        val resolver = contentResolver
-        val time = System.currentTimeMillis()
-        val name =
-            "Screenshot_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date(time))}.png"
+    private fun saveBitmapToCache(bitmap: Bitmap): Uri {
+        val cacheDir = File(cacheDir, "screenshots").apply { mkdirs() }
+        val file = File(cacheDir, "screenshot_${System.currentTimeMillis()}.png")
+        FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.PNG, 100, out) }
+        return FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+    }
 
-        val values = ContentValues().apply {
+    private fun saveBitmapToMediaStore(bitmap: Bitmap): Uri? {
+        val contentValues = ContentValues().apply {
+            val name = "Screenshot_${System.currentTimeMillis()}.png"
             put(MediaStore.Images.Media.DISPLAY_NAME, name)
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            put(MediaStore.Images.Media.WIDTH, width)
-            put(MediaStore.Images.Media.HEIGHT, height)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Screenshots")
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
         }
 
-        var uri: Uri? = null
-        try {
-            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            if (uri != null) {
-                resolver.openOutputStream(uri)?.use { out ->
-                    if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
-                        throw IOException("Fallo al comprimir PNG")
-                    }
-                }
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    values.clear()
-                    values.put(MediaStore.Images.Media.IS_PENDING, 0)
-                    resolver.update(uri, values, null, null)
-                }
+        val resolver = contentResolver
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        if (uri != null) {
+            resolver.openOutputStream(uri).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out!!)
             }
-        } catch (e: Exception) {
-            // Si falla, intenta limpiar el registro
-            if (uri != null) {
-                try {
-                    resolver.delete(uri, null, null)
-                } catch (_: Exception) {
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                contentValues.clear()
+                contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                resolver.update(uri, contentValues, null, null)
             }
-            throw e
         }
         return uri
     }
