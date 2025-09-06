@@ -116,4 +116,10 @@ dependencies {
 
     implementation(libs.easypermissions)
 
+    implementation(libs.androidx.lifecycle.runtime.compose.v284)
+    implementation(libs.androidx.runtime)
+
+    // Para collectAsState()
+    implementation(libs.androidx.runtime.livedata.v168)
+
 }

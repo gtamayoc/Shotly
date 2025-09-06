@@ -16,6 +16,15 @@
         android:maxSdkVersion="32" /> <!-- Android 13+ (Tiramisu) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Requerido desde Android 9 (API 28) para servicios en primer plano -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- Requerido a partir de Android 14 (API 34) al declarar el tipo de servicio -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+
+    <!-- Requerido desde Android 13 (API 33) para mostrar notificaciones -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
 
     <application
         android:allowBackup="true"
@@ -40,6 +49,7 @@
             </intent-filter>
         </activity>
 
+        <!-- Requerido desde Android 10 (API 29) para especificar el tipo, android:foregroundServiceType="mediaProjection" -->
         <service
             android:name=".ScreenshotService"
             android:exported="false"

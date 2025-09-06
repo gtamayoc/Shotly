@@ -27,6 +27,8 @@ import android.provider.MediaStore
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -45,6 +47,10 @@ class ScreenshotService : Service() {
         const val CHANNEL_ID = "screenshot_channel"
         const val CHANNEL_NAME = "Capturas de pantalla"
         const val NOTIF_ID = 1337
+
+        // ... otras constantes
+        private val _isServiceActive = MutableStateFlow(false)
+        val isServiceActive = _isServiceActive.asStateFlow()
     }
 
     private lateinit var mpm: MediaProjectionManager
@@ -57,12 +63,14 @@ class ScreenshotService : Service() {
         super.onCreate()
         mpm = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         createNotificationChannel()
+        _isServiceActive.value = false // Inicialmente inactivo
     }
 
     override fun onDestroy() {
         super.onDestroy()
         projection?.stop()
         imgThread.quitSafely()
+        _isServiceActive.value = false // Marcar como inactivo
     }
 
     override fun onBind(intent: Intent?) = null
@@ -80,6 +88,16 @@ class ScreenshotService : Service() {
                             buildNotification("Inicializando…"),
                             ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
                         )
+                        projection = mpm.getMediaProjection(resultCode, data).also {
+                            // Registra el callback para saber cuándo se detiene la proyección
+                            it.registerCallback(object : MediaProjection.Callback() {
+                                override fun onStop() {
+                                    stopSelf() // Detiene el servicio si el usuario revoca el permiso
+                                }
+                            }, imgHandler)
+                        }
+                        _isServiceActive.value = true
+                        updateNotification("Listo para capturar")
                     } else {
                         startForeground(NOTIF_ID, buildNotification("Inicializando…"))
                     }
@@ -259,7 +277,12 @@ class ScreenshotService : Service() {
                     val uri = saveBitmapToMediaStore(bitmap, width, height)
                     bitmap.recycle()
 
-                    updateNotification("Captura guardada")
+                    // ¡Aquí está la mejora!
+                    if (uri != null) {
+                        updateNotification("Captura guardada", uri)
+                    } else {
+                        updateNotification("Captura guardada (sin URI)")
+                    }
                     // Opcional: podrías lanzar una notificación con la miniatura/acción compartir
                 } catch (e: Exception) {
                     updateNotification("Error al capturar: ${e.message}")
@@ -329,4 +352,41 @@ class ScreenshotService : Service() {
         }
         return uri
     }
+
+    // 1. Modifica la firma de buildNotification para aceptar un URI opcional
+    private fun buildNotification(content: String, imageUri: Uri? = null): Notification {
+        // ... (código existente para contentPI, capturePI, stopPI)
+
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            // ... (configuración existente)
+            .setContentText(content)
+
+        // Si se proporciona un URI de imagen, añade la acción "Ver"
+        if (imageUri != null) {
+            val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                data = imageUri
+                flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+            }
+            val viewPI = PendingIntent.getActivity(
+                this, 3, viewIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(NotificationCompat.Action(
+                android.R.drawable.ic_menu_view,
+                "Ver",
+                viewPI
+            ))
+        }
+
+        return builder.build()
+    }
+
+
+    // 2. Modifica updateNotification para pasar el URI
+    private fun updateNotification(content: String, imageUri: Uri? = null) {
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(NOTIF_ID, buildNotification(content, imageUri))
+    }
+
+
 }
