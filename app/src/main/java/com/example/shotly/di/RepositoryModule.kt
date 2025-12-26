@@ -4,6 +4,8 @@ import com.example.shotly.data.repository.ScreenshotRepositoryImpl
 import com.example.shotly.data.repository.MediaProjectionRepositoryImpl
 import com.example.shotly.domain.repository.ScreenshotRepository
 import com.example.shotly.domain.repository.MediaProjectionRepository
+import com.example.shotly.data.repository.SettingsRepositoryImpl
+import com.example.shotly.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -29,5 +31,13 @@ object RepositoryModule {
         mediaProjectionRepositoryImpl: MediaProjectionRepositoryImpl
     ): MediaProjectionRepository {
         return mediaProjectionRepositoryImpl
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsRepository(
+        settingsRepositoryImpl: SettingsRepositoryImpl
+    ): SettingsRepository {
+        return settingsRepositoryImpl
     }
 }

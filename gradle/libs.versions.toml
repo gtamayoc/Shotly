@@ -1,5 +1,6 @@
 [versions]
 accompanistGlide = "0.28.0"
+leakcanary = "2.14"
 accompanistPermissions = "0.32.0"
 activityComposeVersion = "1.9.0"
 agp = "8.9.0-alpha07"
@@ -71,6 +72,7 @@ uiToolingPreviewVersion = "1.6.0"
 uiVersion = "1.7.0"
 
 [libraries]
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 accompanist-glide = { module = "com.google.accompanist:accompanist-glide", version.ref = "accompanistGlide" }
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 activity-compose-v190 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }

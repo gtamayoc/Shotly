@@ -8,6 +8,8 @@ import com.example.shotly.domain.repository.ScreenshotRepository
 import com.example.shotly.domain.util.Result
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.Dispatchers
 import timber.log.Timber
 import java.util.Date
 import javax.inject.Inject
@@ -27,7 +29,7 @@ class ScreenshotRepositoryImpl @Inject constructor(
     private var lastFetchTime: Long = 0
     private val cacheValidityMs = 30000 // 30 segundos
     
-    override suspend fun getAllScreenshots(): Flow<Result<List<Screenshot>>> = flow {
+    override suspend fun getAllScreenshots(): Flow<Result<List<Screenshot>>> = flow<Result<List<Screenshot>>> {
         emit(Result.Loading)
         try {
             val currentTime = System.currentTimeMillis()
@@ -46,7 +48,7 @@ class ScreenshotRepositoryImpl @Inject constructor(
             Timber.e(e, "Error obteniendo capturas")
             emit(Result.Error(e))
         }
-    }
+    }.flowOn(Dispatchers.IO)
     
     private fun fetchScreenshotsFromMediaStore(): List<Screenshot> {
         val screenshots = mutableListOf<Screenshot>()

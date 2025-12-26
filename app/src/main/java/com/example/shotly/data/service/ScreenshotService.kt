@@ -3,8 +3,10 @@ package com.example.shotly.data.service
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.PixelFormat
@@ -26,13 +28,14 @@ import timber.log.Timber
 
 /**
  * Servicio optimizado para captura de pantalla en segundo plano
- * Restaurado del commit original y adaptado a la nueva arquitectura
+ * Soporta modos: Captura Activa (pantalla) y Captura Notificaciones.
  */
 class ScreenshotService : Service() {
     
     private var mediaProjection: MediaProjection? = null
     private var imageReader: ImageReader? = null
-    
+    private var captureMode: Int = MODE_ACTIVE_SCREEN // Default
+
     private val projectionCallback = object : MediaProjection.Callback() {
         override fun onStop() {
             super.onStop()
@@ -44,11 +47,18 @@ class ScreenshotService : Service() {
     companion object {
         const val ACTION_START = "ACTION_START"
         const val ACTION_CAPTURE = "ACTION_CAPTURE"
-        const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_EXIT = "ACTION_EXIT"
+        
         const val EXTRA_RESULT_CODE = "resultCode"
         const val EXTRA_DATA_INTENT = "data"
-        
+        const val EXTRA_CAPTURE_MODE = "captureMode"
+
+        const val MODE_ACTIVE_SCREEN = 0
+        const val MODE_NOTIFICATIONS = 1
+
         val serviceState = MutableStateFlow<ServiceState>(ServiceState.Idle)
+        private const val NOTIFICATION_ID = 1
+        private const val CHANNEL_ID = "channel_capture"
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -59,36 +69,25 @@ class ScreenshotService : Service() {
 
         when (intent.action) {
             ACTION_START -> {
+                captureMode = intent.getIntExtra(EXTRA_CAPTURE_MODE, MODE_ACTIVE_SCREEN)
                 serviceState.value = ServiceState.Starting
                 startCaptureService(intent)
             }
             ACTION_CAPTURE -> {
                 serviceState.value = ServiceState.Capturing
-                captureScreen()
+                handleCaptureRequest()
             }
-            ACTION_STOP -> {
-                serviceState.value = ServiceState.Stopping
-                stopForegroundService()
+            ACTION_EXIT -> {
+                 stopForegroundService()
             }
         }
 
         return START_NOT_STICKY
     }
 
+
     private fun startCaptureService(intent: Intent) {
         try {
-            // Crear notificación y poner servicio en foreground
-            createNotificationChannel()
-            startForeground(
-                1, 
-                NotificationCompat.Builder(this, "channel")
-                    .setContentTitle("Servicio de captura activo")
-                    .setContentText("Listo para tomar capturas de pantalla")
-                    .setSmallIcon(R.drawable.ic_launcher_foreground)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
-                    .build()
-            )
-
             // Obtener permisos y empezar proyección
             val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, Activity.RESULT_CANCELED)
             val data = intent.getParcelableExtra<Intent>(EXTRA_DATA_INTENT)
@@ -99,7 +98,10 @@ class ScreenshotService : Service() {
                 return
             }
 
-            val projectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+            createNotificationChannel()
+            startForeground(NOTIFICATION_ID, buildNotification())
+
+            val projectionManager = applicationContext.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
             mediaProjection = projectionManager.getMediaProjection(resultCode, data)
 
             val metrics = resources.displayMetrics
@@ -107,6 +109,8 @@ class ScreenshotService : Service() {
             val height = metrics.heightPixels
             val density = metrics.densityDpi
 
+            // Using WeakReference to callback to avoid strong reference cycle if native holds it?
+            // Actually, just using Application Context for Manager often helps.
             mediaProjection?.registerCallback(projectionCallback, Handler(Looper.getMainLooper()))
 
             imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 2)
@@ -122,7 +126,7 @@ class ScreenshotService : Service() {
             )
 
             serviceState.value = ServiceState.Active
-            Timber.d("Servicio de captura iniciado correctamente")
+            Timber.d("Servicio de captura iniciado ($captureMode)")
             
         } catch (e: Exception) {
             Timber.e(e, "Error iniciando servicio de captura")
@@ -131,16 +135,55 @@ class ScreenshotService : Service() {
         }
     }
 
-    private fun captureScreen() {
-        try {
-            // Pequeño retraso para que la imagen esté lista
+    private fun buildNotification(): android.app.Notification {
+        val captureIntent = Intent(this, ScreenshotService::class.java).apply {
+            action = ACTION_CAPTURE
+        }
+        val capturePendingIntent = PendingIntent.getService(
+            this, 0, captureIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val exitIntent = Intent(this, ScreenshotService::class.java).apply {
+            action = ACTION_EXIT
+        }
+        val exitPendingIntent = PendingIntent.getService(
+            this, 1, exitIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val title = if (captureMode == MODE_NOTIFICATIONS) "Captura de Notificaciones" else "Captura de Pantalla"
+        val text = if (captureMode == MODE_NOTIFICATIONS) "Toca para capturar en 3s" else "Toca para capturar pantalla activa"
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(capturePendingIntent) // Click en notificacion captura
+            .addAction(R.drawable.ic_launcher_foreground, "Apagar", exitPendingIntent) // Boton salir
+            .setOngoing(true)
+            .build()
+    }
+
+    private fun handleCaptureRequest() {
+        if (captureMode == MODE_ACTIVE_SCREEN) {
+            // Opción 1: Cerrar diálogos y capturar
+             @Suppress("DEPRECATION")
+             val closeIntent = Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)
+             try {
+                 sendBroadcast(closeIntent)
+             } catch (e: Exception) {
+                 Timber.w("Could not close system dialogs: ${e.message}")
+             }
+             
+             // Esperar a que se cierre la barra - Usuario solicitó 3 segundos de espera
+             Handler(Looper.getMainLooper()).postDelayed({
+                 captureImage()
+             }, 3000)
+        } else {
+            // Opción 2: Esperar 3s para notificaciones
             Handler(Looper.getMainLooper()).postDelayed({
                 captureImage()
-            }, 500)
-        } catch (e: Exception) {
-            Timber.e(e, "Error capturando pantalla")
-            serviceState.value = ServiceState.Error("Error al capturar: ${e.message}", e)
-            serviceState.value = ServiceState.Active // Volver a activo
+            }, 3000)
         }
     }
 
@@ -156,6 +199,7 @@ class ScreenshotService : Service() {
                 Timber.d("Captura guardada exitosamente")
             } else {
                 Timber.w("No se pudo obtener imagen")
+                // Intentar de nuevo en un momento breve si falló (buffer vacío)
                 serviceState.value = ServiceState.Active
             }
         } catch (e: Exception) {
@@ -178,6 +222,8 @@ class ScreenshotService : Service() {
             Bitmap.Config.ARGB_8888
         )
         bitmap.copyPixelsFromBuffer(buffer)
+        
+        // Return cropped if needed, but for now full screen
         return Bitmap.createBitmap(bitmap, 0, 0, image.width, image.height)
     }
 
@@ -204,6 +250,8 @@ class ScreenshotService : Service() {
 
     private fun stopForegroundService() {
         try {
+            serviceState.value = ServiceState.Stopping
+            
             mediaProjection?.unregisterCallback(projectionCallback)
             mediaProjection?.stop()
             mediaProjection = null
@@ -211,10 +259,10 @@ class ScreenshotService : Service() {
             imageReader?.close()
             imageReader = null
             
-            serviceState.value = ServiceState.Idle
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             
+            serviceState.value = ServiceState.Idle
             Timber.d("Servicio detenido correctamente")
         } catch (e: Exception) {
             Timber.e(e, "Error deteniendo servicio")
@@ -225,7 +273,7 @@ class ScreenshotService : Service() {
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                "channel",
+                CHANNEL_ID,
                 "Capturas de Pantalla",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
@@ -241,9 +289,24 @@ class ScreenshotService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaProjection?.stop()
-        imageReader?.close()
+        try {
+            if (mediaProjection != null) {
+                mediaProjection?.unregisterCallback(projectionCallback)
+                mediaProjection?.stop()
+                mediaProjection = null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Error destroying media projection")
+        }
+        
+        try {
+            imageReader?.close()
+            imageReader = null
+        } catch (e: Exception) {
+            Timber.e(e, "Error closing image reader")
+        }
+        
         serviceState.value = ServiceState.Idle
-        Timber.d("Servicio destruido")
+        Timber.d("Servicio destruido y recursos liberados")
     }
 }

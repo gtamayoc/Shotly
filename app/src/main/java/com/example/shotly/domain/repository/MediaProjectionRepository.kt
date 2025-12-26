@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface MediaProjectionRepository {
     fun getServiceState(): Flow<ServiceState>
     suspend fun requestPermission(): Result<Intent>
-    suspend fun startService(resultCode: Int, data: Intent): Result<Unit>
+    suspend fun startService(resultCode: Int, data: Intent, captureMode: Int): Result<Unit>
     suspend fun captureScreen(): Result<String>
     suspend fun stopService(): Result<Unit>
 }

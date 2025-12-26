@@ -43,7 +43,8 @@ fun ScreenshotItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(screenshot.aspectRatio)
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant), // Placeholder bg
                 contentScale = ContentScale.Crop
             )
 

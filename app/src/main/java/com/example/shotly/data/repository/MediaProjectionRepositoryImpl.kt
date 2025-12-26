@@ -35,12 +35,13 @@ class MediaProjectionRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun startService(resultCode: Int, data: Intent): Result<Unit> {
+    override suspend fun startService(resultCode: Int, data: Intent, captureMode: Int): Result<Unit> {
         return try {
             val startIntent = Intent(context, ScreenshotService::class.java).apply {
                 action = ScreenshotService.ACTION_START
                 putExtra(ScreenshotService.EXTRA_RESULT_CODE, resultCode)
                 putExtra(ScreenshotService.EXTRA_DATA_INTENT, data)
+                putExtra(ScreenshotService.EXTRA_CAPTURE_MODE, captureMode)
             }
             ContextCompat.startForegroundService(context, startIntent)
             Timber.d("Service start command sent")
@@ -68,7 +69,7 @@ class MediaProjectionRepositoryImpl @Inject constructor(
     override suspend fun stopService(): Result<Unit> {
         return try {
             val stopIntent = Intent(context, ScreenshotService::class.java).apply {
-                action = ScreenshotService.ACTION_STOP
+                action = ScreenshotService.ACTION_EXIT
             }
             context.startService(stopIntent)
             Timber.d("Service stop command sent")

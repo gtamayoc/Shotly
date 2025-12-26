@@ -126,7 +126,9 @@ dependencies {
 
     // Debug
     debugImplementation libs.androidx.compose.ui.ui.tooling
-    debugImplementation libs.androidx.ui.test.manifest
+
+    // LeakCanary
+    debugImplementation libs.leakcanary.android
 
     implementation libs.material.v1100
 

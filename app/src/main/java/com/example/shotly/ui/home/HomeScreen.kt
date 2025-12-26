@@ -1,6 +1,5 @@
 package com.example.shotly.ui.home
 
-
 import android.Manifest
 import android.app.Activity
 import android.os.Build
@@ -8,9 +7,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,13 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.shotly.data.service.ScreenshotService
 import com.example.shotly.domain.model.ServiceState
 import com.example.shotly.ui.components.ErrorDialog
 import com.example.shotly.ui.components.LoadingIndicator
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import timber.log.Timber
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -36,6 +38,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val serviceState by viewModel.serviceState.collectAsStateWithLifecycle()
 
@@ -63,7 +66,8 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
@@ -88,6 +92,15 @@ fun HomeScreen(
         // Service status card
         ServiceStatusCard(serviceState = serviceState)
 
+        // Settings Section
+        SettingsCard(
+            captureMode = uiState.captureMode,
+            captureOnOpen = uiState.captureOnAppOpen,
+            onModeChanged = viewModel::setCaptureMode,
+            onToggleOnOpen = viewModel::setCaptureOnAppOpen,
+            enabled = serviceState is ServiceState.Idle // Solo editable si inactivo
+        )
+
         Spacer(modifier = Modifier.weight(1f))
 
         // Action buttons
@@ -110,7 +123,13 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     CaptureButton(
-                        onClick = { viewModel.captureScreen() }
+                        onClick = { 
+                            // Minimize logic if "Active Screen" mode
+                            if (uiState.captureMode == ScreenshotService.MODE_ACTIVE_SCREEN) {
+                                activity?.moveTaskToBack(true)
+                            }
+                            viewModel.captureScreen() 
+                        }
                     )
 
                     OutlinedButton(
@@ -168,6 +187,66 @@ fun HomeScreen(
             message = error,
             onDismiss = { viewModel.clearError() }
         )
+    }
+}
+
+@Composable
+fun SettingsCard(
+    captureMode: Int,
+    captureOnOpen: Boolean,
+    onModeChanged: (Int) -> Unit,
+    onToggleOnOpen: (Boolean) -> Unit,
+    enabled: Boolean
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Settings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Configuración", style = MaterialTheme.typography.titleMedium)
+            }
+            
+            Divider()
+
+            Text("Modo de Captura", style = MaterialTheme.typography.bodyMedium)
+            
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = captureMode == ScreenshotService.MODE_ACTIVE_SCREEN,
+                    onClick = { if (enabled) onModeChanged(ScreenshotService.MODE_ACTIVE_SCREEN) },
+                    enabled = enabled
+                )
+                Text("Pantalla Activa", modifier = Modifier.padding(start = 8.dp))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = captureMode == ScreenshotService.MODE_NOTIFICATIONS,
+                    onClick = { if (enabled) onModeChanged(ScreenshotService.MODE_NOTIFICATIONS) },
+                    enabled = enabled
+                )
+                Text("Solo Notificaciones (Delay 3s)", modifier = Modifier.padding(start = 8.dp))
+            }
+
+            Divider()
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Capturar al abrir App", style = MaterialTheme.typography.bodyMedium)
+                Switch(
+                    checked = captureOnOpen,
+                    onCheckedChange = onToggleOnOpen
+                )
+            }
+        }
     }
 }
 
