@@ -9,4 +9,47 @@
     <string name="request_button">Request Permission</string>
     <string name="title_activity_main_screen">MainScreen</string>
     <string name="title_activity_main">MainActivity</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Shotly</string>
+    <string name="home_subtitle">Captura de pantalla profesional</string>
+    <string name="service_status">Estado del Servicio</string>
+    <string name="service_idle">Inactivo</string>
+    <string name="service_active">Activo</string>
+    <string name="service_error">Error</string>
+    <string name="start_service">Iniciar Servicio</string>
+    <string name="stop_service">Detener Servicio</string>
+    <string name="take_screenshot">Tomar Captura</string>
+
+    <!-- Screenshots Screen -->
+    <string name="screenshots_title">Capturas</string>
+    <string name="no_screenshots">No hay capturas</string>
+    <string name="no_screenshots_subtitle">Toma tu primera captura desde la pantalla principal</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_storage">Almacenamiento</string>
+    <string name="settings_capture">Captura</string>
+    <string name="settings_notification">Notificaciones</string>
+    <string name="settings_about">Acerca de</string>
+
+    <!-- Common -->
+    <string name="loading">Cargando...</string>
+    <string name="error">Error</string>
+    <string name="retry">Reintentar</string>
+    <string name="ok">Aceptar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="delete">Eliminar</string>
+    <string name="share">Compartir</string>
+    <string name="edit">Editar</string>
+
+    <!-- Permissions -->
+    <string name="permission_required">Permiso requerido</string>
+    <string name="notification_permission_required">Se requiere permiso de notificaciones para el funcionamiento del servicio</string>
+    <string name="media_projection_permission_required">Se requiere permiso de captura de pantalla</string>
+
+    <!-- Notifications -->
+    <string name="screenshot_service_running">Servicio de captura activo</string>
+    <string name="screenshot_service_description">Listo para tomar capturas de pantalla</string>
+
 </resources>

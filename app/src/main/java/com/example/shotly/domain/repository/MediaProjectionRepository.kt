@@ -1,4 +1,4 @@
-package com.example.shotly.data.repository
+package com.example.shotly.domain.repository
 
 import android.content.Intent
 import com.example.shotly.domain.model.ServiceState

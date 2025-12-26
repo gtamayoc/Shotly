@@ -9,5 +9,8 @@
     <!--
    <include domain="sharedpref" path="."/>
    <exclude domain="sharedpref" path="device.xml"/>
+    <exclude domain="external" path="Pictures" />
 -->
+    <!-- Excluir capturas de pantalla del backup por privacidad -->
+    <exclude domain="external" path="Pictures" />
 </full-backup-content>
