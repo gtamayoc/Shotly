@@ -88,7 +88,44 @@ fun AppNavigation() {
         ) {
             composable("home") { HomeScreen() }
             composable("screenshots") { ScreenshotsScreen() }
-            composable("settings") { SettingsScreen() }
+            composable("settings") { 
+                SettingsScreen(
+                    onNavigateToPrivacy = { navController.navigate("settings/privacy") },
+                    onNavigateToCapture = { navController.navigate("settings/capture") },
+                    onNavigateToStorage = { navController.navigate("settings/storage") },
+                    onNavigateToNotifications = { navController.navigate("settings/notifications") },
+                    onNavigateToAbout = { navController.navigate("settings/about") }
+                ) 
+            }
+            composable("settings/privacy") {
+                com.example.shotly.ui.settings.PrivacySecurityScreen(
+                    viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("settings/capture") {
+                com.example.shotly.ui.settings.CaptureSettingsScreen(
+                    viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("settings/storage") {
+                com.example.shotly.ui.settings.StorageSettingsScreen(
+                    viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("settings/notifications") {
+                com.example.shotly.ui.settings.NotificationSettingsScreen(
+                    viewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable("settings/about") {
+                com.example.shotly.ui.settings.AboutScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
     }
 }

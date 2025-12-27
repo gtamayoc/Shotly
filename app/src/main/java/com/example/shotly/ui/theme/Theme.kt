@@ -1,6 +1,5 @@
 package com.example.shotly.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,28 +8,39 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = PrimaryLightBlue,
+    onPrimary = Color.White,
+    primaryContainer = PrimaryDarkBlue,
+    onPrimaryContainer = Color.White,
+    secondary = SecondaryLightSlate,
+    onSecondary = Color.White,
+    background = NeutralBackgroundDark,
+    surface = SurfaceDark,
+    onBackground = Color(0xFFE2E8F0),
+    onSurface = Color(0xFFE2E8F0),
+    surfaceVariant = SecondaryDarkSlate,
+    onSurfaceVariant = SecondaryLightSlate,
+    error = ErrorRed
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = PrimaryBlue,
     onPrimary = Color.White,
+    primaryContainer = PrimaryLightBlue,
+    onPrimaryContainer = Color.White,
+    secondary = SecondarySlate,
     onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    background = NeutralBackgroundLight,
+    surface = SurfaceLight,
+    onBackground = Color(0xFF0F172A),
+    onSurface = Color(0xFF0F172A),
+    surfaceVariant = Color(0xFFF1F5F9),
+    onSurfaceVariant = SecondarySlate,
+    error = ErrorRed
 )
 
 @Composable

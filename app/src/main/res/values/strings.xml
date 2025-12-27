@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">App Cap</string>
+    <string name="app_name">App Shotly Alpha</string>
     <string name="title_activity_main2">MainActivity2</string>
     <string name="title_activity_home_screen">HomeScreen</string>
     <string name="title_activity_capture_card">CaptureCard</string>
@@ -24,7 +24,13 @@
     <!-- Screenshots Screen -->
     <string name="screenshots_title">Capturas</string>
     <string name="no_screenshots">No hay capturas</string>
-    <string name="no_screenshots_subtitle">Toma tu primera captura desde la pantalla principal</string>
+    <string name="no_screenshots_subtitle">Las capturas que tomes aparecerán aquí</string>
+    <string name="delete_screenshot_title">Eliminar captura</string>
+    <string name="delete_screenshot_message">¿Estás seguro de que deseas eliminar esta captura?</string>
+
+    <!-- Preview -->
+    <string name="preview_title">Vista Previa</string>
+    <string name="open_with">Abrir con...</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Ajustes</string>
@@ -42,6 +48,7 @@
     <string name="delete">Eliminar</string>
     <string name="share">Compartir</string>
     <string name="edit">Editar</string>
+    <string name="close">Cerrar</string>
 
     <!-- Permissions -->
     <string name="permission_required">Permiso requerido</string>

@@ -26,12 +26,22 @@ import com.example.shotly.domain.model.ServiceState
 import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
 
+import com.example.shotly.domain.repository.SettingsRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
+
 /**
  * Servicio optimizado para captura de pantalla en segundo plano
  * Soporta modos: Captura Activa (pantalla) y Captura Notificaciones.
  */
+@AndroidEntryPoint
 class ScreenshotService : Service() {
     
+    @Inject
+    lateinit var settingsRepository: SettingsRepository
+
     private var mediaProjection: MediaProjection? = null
     private var imageReader: ImageReader? = null
     private var captureMode: Int = MODE_ACTIVE_SCREEN // Default
@@ -228,10 +238,32 @@ class ScreenshotService : Service() {
     }
 
     private fun saveToGallery(bitmap: Bitmap) {
+        // Obtener ruta personalizada síncronamente (en background thread del servicio)
+        val storageUriString = runBlocking {
+             try {
+                 settingsRepository.storageLocation.first()
+             } catch (e: Exception) {
+                 ""
+             }
+        }
+        
+        // Interpretar carpeta
+        val folderName = if (storageUriString.isNotEmpty()) {
+             try {
+                val uri = android.net.Uri.parse(storageUriString)
+                val segment = uri.lastPathSegment?.split(":")?.lastOrNull()
+                if (segment != null && segment.isNotBlank()) "Pictures/$segment" else "Pictures/Screenshots"
+             } catch (e: Exception) {
+                 "Pictures/Screenshots"
+             }
+        } else {
+            "Pictures/Screenshots"
+        }
+
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "screenshot_${System.currentTimeMillis()}.png")
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-            put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Screenshots")
+            put(MediaStore.Images.Media.RELATIVE_PATH, folderName)
         }
 
         val uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
